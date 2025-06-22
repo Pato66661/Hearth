@@ -91,7 +91,7 @@ with tabs[0]:
     st.bar_chart(df.select_dtypes(include=np.number).iloc[:, :6])
 
     st.subheader("Matriz de correlaciones")
-    fig2, ax2 = plt.subplots(figsize=(10, 6))
+    fig2, ax2 = plt.subplots(figsize=(5, 3))
     sns.heatmap(df.corr(numeric_only=True), annot=True, cmap="coolwarm", ax=ax2)
     st.pyplot(fig2)
 
@@ -161,7 +161,7 @@ with tabs[3]:
     
     # Visualización de barras comparativas
     fig5, ax5 = plt.subplots()
-    metricas.T.plot(kind='bar', ax=ax5, rot=0, color=["#1f77b4", "#ff7f0e"])
+    metricas.T.plot(kind='bar', ax=ax5, rot=0, color=["#1f77b4", "#4267a4"])
     ax5.set_ylabel("Valor")
     ax5.set_title("Comparación de métricas entre modelos")
     st.pyplot(fig5)
