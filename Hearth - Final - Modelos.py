@@ -121,7 +121,18 @@ with tabs[2]:
 
     y_true = df["target"]
     y_true = y_true.astype(int)
-    y_pred = pd.Series(y_pred).astype(int)
+import numbers
+
+# Convertir a array plano si es necesario
+y_pred = np.array(y_pred).flatten()
+
+# Asegurar que todos los valores son numéricos y válidos
+if np.all([isinstance(val, numbers.Number) for val in y_pred]):
+    y_pred = pd.Series(y_pred).fillna(0).astype(int)
+else:
+    st.error("El modelo ha devuelto valores no válidos para la predicción.")
+    st.stop()
+
 
     cm = confusion_matrix(y_true, y_pred)
     fig4, ax4 = plt.subplots()
