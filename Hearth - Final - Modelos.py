@@ -26,7 +26,7 @@ st.title("Análisis de Riesgo Cardíaco")
 st.caption("Complete el formulario y explore los resultados del modelo")
 
 # Selección de modelo
-modelo_opcion = st.radio("Seleccione el modelo a utilizar:", ["Modelo completo", "Modelo reducido (7 variables)"])
+modelo_opcion = st.radio("Seleccione el modelo a utilizar:", ["Modelo completo", "Modelo reducido"])
 
 # Formulario del paciente
 with st.expander("📝 Formulario del Paciente", expanded=True):
