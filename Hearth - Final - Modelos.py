@@ -14,7 +14,10 @@ def load_models():
 
 @st.cache_data
 def load_data():
-    return pd.read_csv("heart.csv")
+    df = pd.read_csv("heart.csv")
+    if df['target'].dtype == object:
+        df['target'] = df['target'].map({"No Disease": 0, "Disease": 1})
+    return df
 
 model_completo, model_reducido = load_models()
 df = load_data()
