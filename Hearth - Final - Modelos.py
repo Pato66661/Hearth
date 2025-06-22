@@ -5,6 +5,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import confusion_matrix, classification_report, roc_auc_score, accuracy_score, f1_score
+import numbers
 
 # Carga de modelos
 @st.cache_resource
@@ -50,6 +51,7 @@ with st.expander("📝 Formulario del Paciente", expanded=True):
             thal = st.selectbox("Talasemia", [0, 1, 2, 3], format_func=lambda x: ["Normal", "Defecto fijo", "Defecto reversible", "Otro"][x])
         submit = st.form_submit_button("Analizar")
 
+# Predicción y resultados
 if submit:
     features = np.array([[age, sex, cp, trestbps, chol, fbs, restecg,
                           thalach, exang, oldpeak, slope, ca, thal]])
@@ -64,22 +66,23 @@ if submit:
 
         st.subheader("🔎 Resultado del Análisis")
         if proba >= 80:
-            st.warning(f"Riesgo Elevado — Probabilidad: {proba:.1f}%")
+            st.warning(f"🚨 Riesgo Elevado — Probabilidad: {proba:.1f}%")
             st.markdown("**Recomendaciones:**\n- Consulta con cardiólogo\n- Exámenes clínicos\n- Estilo de vida saludable")
         else:
-            st.success(f"Riesgo Bajo — Probabilidad: {proba:.1f}%")
+            st.success(f"✅ Riesgo Bajo — Probabilidad: {proba:.1f}%")
             st.markdown("**Consejos:**\n- Mantén controles regulares\n- Alimentación y actividad física equilibradas")
 
         st.progress(int(proba), text=f"Probabilidad estimada: {proba:.1f}%")
+
     except Exception as e:
         st.error(f"Ocurrió un error: {str(e)}")
 
-# Visualizaciones interactivas
+# Visualizaciones
 st.markdown("---")
 st.markdown("## 📊 Visualización de Modelos y Datos")
-
 tabs = st.tabs(["📈 Exploración", "⭐ Importancia", "🔥 Confusión", "📊 Métricas"])
 
+# Exploración
 with tabs[0]:
     st.subheader("Distribución de la variable objetivo")
     fig1, ax1 = plt.subplots(figsize=(9, 3))
@@ -95,6 +98,7 @@ with tabs[0]:
     sns.heatmap(df.corr(numeric_only=True), annot=True, cmap="coolwarm", ax=ax2)
     st.pyplot(fig2)
 
+# Importancia de características
 with tabs[1]:
     st.subheader("Importancia de Características")
     if modelo_opcion == "Modelo completo":
@@ -109,6 +113,7 @@ with tabs[1]:
     ax3.barh(imp_df["Variable"], imp_df["Importancia"], color="steelblue")
     st.pyplot(fig3)
 
+# Matriz de confusión
 with tabs[2]:
     st.subheader("Matriz de Confusión")
     if modelo_opcion == "Modelo completo":
@@ -119,39 +124,30 @@ with tabs[2]:
         X = df[['cp', 'thal', 'thalach', 'oldpeak', 'ca', 'chol', 'age']]
         y_pred = model_reducido.predict(X)
 
-    y_true = df["target"]
-    y_true = y_true.astype(int)
-import numbers
+    y_true = df["target"].astype(int)
+    y_pred = np.array(y_pred).flatten()
 
-# Convertir a array plano si es necesario
-y_pred = np.array(y_pred).flatten()
+    if np.all([isinstance(val, numbers.Number) for val in y_pred]):
+        y_pred = pd.Series(y_pred).fillna(0).astype(int)
+        cm = confusion_matrix(y_true, y_pred)
+        fig4, ax4 = plt.subplots()
+        sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", ax=ax4)
+        ax4.set_xlabel("Predicción")
+        ax4.set_ylabel("Real")
+        st.pyplot(fig4)
+    else:
+        st.error("El modelo ha devuelto valores no válidos.")
 
-# Asegurar que todos los valores son numéricos y válidos
-if np.all([isinstance(val, numbers.Number) for val in y_pred]):
-    y_pred = pd.Series(y_pred).fillna(0).astype(int)
-else:
-    st.error("El modelo ha devuelto valores no válidos para la predicción.")
-    st.stop()
-
-
-    cm = confusion_matrix(y_true, y_pred)
-    fig4, ax4 = plt.subplots()
-    sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", ax=ax4)
-    ax4.set_xlabel("Predicción")
-    ax4.set_ylabel("Real")
-    st.pyplot(fig4)
-
+# Métricas comparativas
 with tabs[3]:
     st.subheader("Métricas Comparativas")
-    y_true = df["target"].astype(int)
-
     try:
+        y_true = df["target"].astype(int)
+
         y_pred_full = model_completo.predict(df[['age', 'sex', 'cp', 'trestbps', 'chol', 'fbs', 'restecg',
                                                  'thalach', 'exang', 'oldpeak', 'slope', 'ca', 'thal']])
-        y_pred_full = np.array(y_pred_full).flatten().astype(int)
 
         y_pred_red = model_reducido.predict(df[['cp', 'thal', 'thalach', 'oldpeak', 'ca', 'chol', 'age']])
-        y_pred_red = np.array(y_pred_red).flatten().astype(int)
 
         metricas = pd.DataFrame({
             "Modelo Completo": [accuracy_score(y_true, y_pred_full),
@@ -173,10 +169,4 @@ with tabs[3]:
     except Exception as e:
         st.error("Ocurrió un error al calcular las métricas: " + str(e))
 
-    
-    # Visualización de barras comparativas
-    fig5, ax5 = plt.subplots()
-    metricas.T.plot(kind='bar', ax=ax5, rot=0, color=["#1f77b4", "#4267a4"])
-    ax5.set_ylabel("Valor")
-    ax5.set_title("Comparación de métricas entre modelos")
-    st.pyplot(fig5)
+
