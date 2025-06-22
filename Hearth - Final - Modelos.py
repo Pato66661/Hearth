@@ -82,7 +82,7 @@ tabs = st.tabs(["📈 Exploración", "⭐ Importancia", "🔥 Confusión", "📊
 
 with tabs[0]:
     st.subheader("Distribución de la variable objetivo")
-    fig1, ax1 = plt.subplots()
+    fig1, ax1 = plt.subplots(figsize=(9, 3))
     df["target"].value_counts().plot(kind="bar", color=["salmon", "lightgreen"], ax=ax1)
     ax1.set_xticklabels(["Sin enfermedad", "Con enfermedad"], rotation=0)
     st.pyplot(fig1)
@@ -91,7 +91,7 @@ with tabs[0]:
     st.bar_chart(df.select_dtypes(include=np.number).iloc[:, :6])
 
     st.subheader("Matriz de correlaciones")
-    fig2, ax2 = plt.subplots(figsize=(5, 3))
+    fig2, ax2 = plt.subplots(figsize=(10, 6))
     sns.heatmap(df.corr(numeric_only=True), annot=True, cmap="coolwarm", ax=ax2)
     st.pyplot(fig2)
 
