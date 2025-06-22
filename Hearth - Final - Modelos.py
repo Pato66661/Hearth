@@ -118,7 +118,11 @@ with tabs[2]:
     else:
         X = df[['cp', 'thal', 'thalach', 'oldpeak', 'ca', 'chol', 'age']]
         y_pred = model_reducido.predict(X)
+
     y_true = df["target"]
+    y_true = y_true.astype(int)
+    y_pred = pd.Series(y_pred).astype(int)
+
     cm = confusion_matrix(y_true, y_pred)
     fig4, ax4 = plt.subplots()
     sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", ax=ax4)
@@ -128,7 +132,7 @@ with tabs[2]:
 
 with tabs[3]:
     st.subheader("Métricas Comparativas")
-    y_true = df["target"]
+    y_true = df["target"].astype(int)
     y_pred_full = model_completo.predict(df[['age', 'sex', 'cp', 'trestbps', 'chol', 'fbs', 'restecg',
                                              'thalach', 'exang', 'oldpeak', 'slope', 'ca', 'thal']])
     y_pred_red = model_reducido.predict(df[['cp', 'thal', 'thalach', 'oldpeak', 'ca', 'chol', 'age']])
@@ -143,7 +147,10 @@ with tabs[3]:
     }, index=["Accuracy", "F1 Score", "AUC"])
 
     st.dataframe(metricas.style.format("{:.3f}"))
-    st.bar_chart(metricas.T)
-
-st.markdown("---")
-st.caption("Este sistema es informativo. Consulte siempre con un profesional de salud.")
+    
+    # Visualización de barras comparativas
+    fig5, ax5 = plt.subplots()
+    metricas.T.plot(kind='bar', ax=ax5, rot=0, color=["#1f77b4", "#ff7f0e"])
+    ax5.set_ylabel("Valor")
+    ax5.set_title("Comparación de métricas entre modelos")
+    st.pyplot(fig5)
