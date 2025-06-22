@@ -63,7 +63,7 @@ if submit:
             proba = model_reducido.predict_proba(reduced_features)[0][1] * 100
 
         st.subheader("🔎 Resultado del Análisis")
-        if prediction == 0.8:
+        if proba >= 80:
             st.warning(f"Riesgo Elevado — Probabilidad: {proba:.1f}%")
             st.markdown("**Recomendaciones:**\n- Consulta con cardiólogo\n- Exámenes clínicos\n- Estilo de vida saludable")
         else:
