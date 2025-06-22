@@ -95,30 +95,37 @@ with tabs[2]:
     X = df[nombres]
     y_true = df["target"].astype(int).values
     y_pred = model_reducido.predict(X) if modelo_opcion == "Modelo reducido" else model_completo.predict(X)
-    y_pred = np.array(y_pred).astype(int)
-    if type_of_target(y_true) == type_of_target(y_pred):
-        cm = confusion_matrix(y_true, y_pred)
-        fig, ax = plt.subplots()
-        sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", ax=ax)
-        ax.set_xlabel("Predicción"); ax.set_ylabel("Real")
-        ax.set_title("Matriz de Confusión")
-        st.pyplot(fig)
-    else:
-        st.error("Error de tipos en los datos. Asegúrese de que las etiquetas verdaderas y predichas sean compatibles.")
+    try:
+        y_pred = np.array(y_pred).astype(int)
+        if type_of_target(y_true) == type_of_target(y_pred):
+            cm = confusion_matrix(y_true, y_pred)
+            fig, ax = plt.subplots()
+            sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", ax=ax)
+            ax.set_xlabel("Predicción"); ax.set_ylabel("Real")
+            ax.set_title("Matriz de Confusión")
+            st.pyplot(fig)
+        else:
+            st.error("Error de tipos en los datos. Asegúrese de que las etiquetas verdaderas y predichas sean compatibles.")
+    except ValueError as ve:
+        st.error(f"Error al convertir predicciones: {str(ve)}")
 
 with tabs[3]:
     st.subheader("Comparación de Métricas")
     y_true = df["target"].astype(int).values
-    y_pred_full = model_completo.predict(df[df.columns[:-1]]).astype(int)
-    y_pred_red = model_reducido.predict(df[['cp', 'thal', 'thalach', 'oldpeak', 'ca', 'chol', 'age']]).astype(int)
-    metricas = pd.DataFrame({
-        "Modelo Completo": [accuracy_score(y_true, y_pred_full), f1_score(y_true, y_pred_full), roc_auc_score(y_true, y_pred_full)],
-        "Modelo Reducido": [accuracy_score(y_true, y_pred_red), f1_score(y_true, y_pred_red), roc_auc_score(y_true, y_pred_red)]
-    }, index=["Accuracy", "F1 Score", "AUC"])
-    st.dataframe(metricas.style.format("{:.3f}"))
-    fig, ax = plt.subplots()
-    metricas.T.plot(kind='bar', ax=ax, rot=0)
-    ax.set_title("Comparación de Métricas entre Modelos")
-    ax.set_ylabel("Valor")
-    st.pyplot(fig)
-# Este código es un ejemplo de una aplicación Streamlit para predecir el riesgo cardíaco utilizando modelos de machine learning.
+    y_pred_full = model_completo.predict(df[df.columns[:-1]])
+    y_pred_red = model_reducido.predict(df[['cp', 'thal', 'thalach', 'oldpeak', 'ca', 'chol', 'age']])
+    try:
+        y_pred_full = np.array(y_pred_full).astype(int)
+        y_pred_red = np.array(y_pred_red).astype(int)
+        metricas = pd.DataFrame({
+            "Modelo Completo": [accuracy_score(y_true, y_pred_full), f1_score(y_true, y_pred_full), roc_auc_score(y_true, y_pred_full)],
+            "Modelo Reducido": [accuracy_score(y_true, y_pred_red), f1_score(y_true, y_pred_red), roc_auc_score(y_true, y_pred_red)]
+        }, index=["Accuracy", "F1 Score", "AUC"])
+        st.dataframe(metricas.style.format("{:.3f}"))
+        fig, ax = plt.subplots()
+        metricas.T.plot(kind='bar', ax=ax, rot=0)
+        ax.set_title("Comparación de Métricas entre Modelos")
+        ax.set_ylabel("Valor")
+        st.pyplot(fig)
+    except ValueError as ve:
+        st.error(f"Error al calcular métricas: {str(ve)}")
