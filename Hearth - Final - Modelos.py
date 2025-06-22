@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.metrics import confusion_matrix, classification_report, roc_auc_score, accuracy_score, f1_score
+from sklearn.metrics import confusion_matrix, roc_auc_score, accuracy_score, f1_score
 
 # Cargar modelos y datos
 @st.cache_resource
@@ -19,7 +19,7 @@ model_completo, model_reducido = load_models()
 df = load_data()
 
 st.set_page_config("Predicción Cardíaca", layout="wide")
-st.title("Análisis de Riesgo Cardíaco")
+st.title("Análisis de Riesgo Cardíaco YACHAY")
 st.caption("Complete el formulario para evaluar el riesgo cardíaco")
 
 modelo_opcion = st.radio("Modelo a utilizar:", ["Modelo completo", "Modelo reducido"])
@@ -66,8 +66,13 @@ st.markdown("---")
 tabs = st.tabs(["Exploración", "Importancia", "Confusión", "Métricas"])
 
 with tabs[0]:
+    st.subheader("Distribución de la variable objetivo")
     st.bar_chart(df['target'].value_counts())
+
+    st.subheader("Variables Numéricas")
     st.bar_chart(df.select_dtypes(np.number).iloc[:, :6])
+
+    st.subheader("Matriz de Correlación")
     fig, ax = plt.subplots()
     sns.heatmap(df.corr(numeric_only=True), annot=True, cmap="coolwarm", ax=ax)
     st.pyplot(fig)
@@ -78,6 +83,7 @@ with tabs[1]:
     imp_df = pd.DataFrame({"Variable": nombres, "Importancia": importancias}).sort_values("Importancia")
     fig, ax = plt.subplots()
     ax.barh(imp_df["Variable"], imp_df["Importancia"], color="steelblue")
+    ax.set_title("Importancia de Variables")
     st.pyplot(fig)
 
 with tabs[2]:
@@ -88,16 +94,21 @@ with tabs[2]:
     fig, ax = plt.subplots()
     sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", ax=ax)
     ax.set_xlabel("Predicción"); ax.set_ylabel("Real")
+    ax.set_title("Matriz de Confusión")
     st.pyplot(fig)
 
 with tabs[3]:
+    st.subheader("Comparación de Métricas")
+    y_true = df["target"]
     y_pred_full = model_completo.predict(df[df.columns[:-1]])
-    y_pred_red = model_reducido.predict(df[nombres])
+    y_pred_red = model_reducido.predict(df[['cp', 'thal', 'thalach', 'oldpeak', 'ca', 'chol', 'age']])
     metricas = pd.DataFrame({
-        "Completo": [accuracy_score(y_true, y_pred_full), f1_score(y_true, y_pred_full), roc_auc_score(y_true, y_pred_full)],
-        "Reducido": [accuracy_score(y_true, y_pred_red), f1_score(y_true, y_pred_red), roc_auc_score(y_true, y_pred_red)]
-    }, index=["Accuracy", "F1", "AUC"])
+        "Modelo Completo": [accuracy_score(y_true, y_pred_full), f1_score(y_true, y_pred_full), roc_auc_score(y_true, y_pred_full)],
+        "Modelo Reducido": [accuracy_score(y_true, y_pred_red), f1_score(y_true, y_pred_red), roc_auc_score(y_true, y_pred_red)]
+    }, index=["Accuracy", "F1 Score", "AUC"])
     st.dataframe(metricas.style.format("{:.3f}"))
     fig, ax = plt.subplots()
     metricas.T.plot(kind='bar', ax=ax, rot=0)
+    ax.set_title("Comparación de Métricas entre Modelos")
+    ax.set_ylabel("Valor")
     st.pyplot(fig)
