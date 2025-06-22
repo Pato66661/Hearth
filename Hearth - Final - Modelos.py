@@ -5,7 +5,7 @@ import numpy as np
 @st.cache_resource
 def load_models():
     model_completo = joblib.load("modelo_random_1.pkl")
-    model_reducido = joblib.load("modelo_reducido.pkl")
+    model_reducido = joblib.load("modelo_random_reducido.pkl")
     return model_completo, model_reducido
 
 model_completo, model_reducido = load_models()
