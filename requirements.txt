@@ -4,3 +4,9 @@ joblib
 scikit-learn
 jinja2
 python-multipart
+streamlit
+numpy
+pandas
+matplotlib
+seaborn
+
