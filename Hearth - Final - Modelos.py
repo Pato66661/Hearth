@@ -5,6 +5,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import confusion_matrix, roc_auc_score, accuracy_score, f1_score
+from sklearn.utils.multiclass import type_of_target
 
 # Cargar modelos y datos
 @st.cache_resource
@@ -19,7 +20,7 @@ model_completo, model_reducido = load_models()
 df = load_data()
 
 st.set_page_config("Predicción Cardíaca", layout="wide")
-st.title("Análisis de Riesgo Cardíaco YACHAY")
+st.title("Análisis de Riesgo Cardíaco")
 st.caption("Complete el formulario para evaluar el riesgo cardíaco")
 
 modelo_opcion = st.radio("Modelo a utilizar:", ["Modelo completo", "Modelo reducido"])
@@ -56,7 +57,11 @@ if submit:
             proba = model_reducido.predict_proba(features[:, idx])[0][1] * 100
 
         st.subheader("Resultado del Análisis")
-        st.warning(f"🚨 Riesgo Elevado — {proba:.1f}%") if proba >= 80 else st.success(f"✅ Riesgo Bajo — {proba:.1f}%")
+        if proba >= 80:
+            st.warning(f"🚨 Riesgo Elevado — {proba:.1f}%")
+        else:
+            st.success(f"✅ Riesgo Bajo — {proba:.1f}%")
+
         st.progress(int(proba), text=f"Probabilidad estimada: {proba:.1f}%")
     except Exception as e:
         st.error(f"Error: {str(e)}")
@@ -88,20 +93,24 @@ with tabs[1]:
 
 with tabs[2]:
     X = df[nombres]
-    y_true = df["target"]
+    y_true = df["target"].astype(int).values
     y_pred = model_reducido.predict(X) if modelo_opcion == "Modelo reducido" else model_completo.predict(X)
-    cm = confusion_matrix(y_true, y_pred)
-    fig, ax = plt.subplots()
-    sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", ax=ax)
-    ax.set_xlabel("Predicción"); ax.set_ylabel("Real")
-    ax.set_title("Matriz de Confusión")
-    st.pyplot(fig)
+    y_pred = np.array(y_pred).astype(int)
+    if type_of_target(y_true) == type_of_target(y_pred):
+        cm = confusion_matrix(y_true, y_pred)
+        fig, ax = plt.subplots()
+        sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", ax=ax)
+        ax.set_xlabel("Predicción"); ax.set_ylabel("Real")
+        ax.set_title("Matriz de Confusión")
+        st.pyplot(fig)
+    else:
+        st.error("Error de tipos en los datos. Asegúrese de que las etiquetas verdaderas y predichas sean compatibles.")
 
 with tabs[3]:
     st.subheader("Comparación de Métricas")
-    y_true = df["target"]
-    y_pred_full = model_completo.predict(df[df.columns[:-1]])
-    y_pred_red = model_reducido.predict(df[['cp', 'thal', 'thalach', 'oldpeak', 'ca', 'chol', 'age']])
+    y_true = df["target"].astype(int).values
+    y_pred_full = model_completo.predict(df[df.columns[:-1]]).astype(int)
+    y_pred_red = model_reducido.predict(df[['cp', 'thal', 'thalach', 'oldpeak', 'ca', 'chol', 'age']]).astype(int)
     metricas = pd.DataFrame({
         "Modelo Completo": [accuracy_score(y_true, y_pred_full), f1_score(y_true, y_pred_full), roc_auc_score(y_true, y_pred_full)],
         "Modelo Reducido": [accuracy_score(y_true, y_pred_red), f1_score(y_true, y_pred_red), roc_auc_score(y_true, y_pred_red)]
@@ -112,3 +121,4 @@ with tabs[3]:
     ax.set_title("Comparación de Métricas entre Modelos")
     ax.set_ylabel("Valor")
     st.pyplot(fig)
+# Este código es un ejemplo de una aplicación Streamlit para predecir el riesgo cardíaco utilizando modelos de machine learning.
