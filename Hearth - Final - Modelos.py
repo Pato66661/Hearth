@@ -144,20 +144,35 @@ else:
 with tabs[3]:
     st.subheader("Métricas Comparativas")
     y_true = df["target"].astype(int)
-    y_pred_full = model_completo.predict(df[['age', 'sex', 'cp', 'trestbps', 'chol', 'fbs', 'restecg',
-                                             'thalach', 'exang', 'oldpeak', 'slope', 'ca', 'thal']])
-    y_pred_red = model_reducido.predict(df[['cp', 'thal', 'thalach', 'oldpeak', 'ca', 'chol', 'age']])
 
-    metricas = pd.DataFrame({
-        "Modelo Completo": [accuracy_score(y_true, y_pred_full),
-                            f1_score(y_true, y_pred_full),
-                            roc_auc_score(y_true, y_pred_full)],
-        "Modelo Reducido": [accuracy_score(y_true, y_pred_red),
-                            f1_score(y_true, y_pred_red),
-                            roc_auc_score(y_true, y_pred_red)]
-    }, index=["Accuracy", "F1 Score", "AUC"])
+    try:
+        y_pred_full = model_completo.predict(df[['age', 'sex', 'cp', 'trestbps', 'chol', 'fbs', 'restecg',
+                                                 'thalach', 'exang', 'oldpeak', 'slope', 'ca', 'thal']])
+        y_pred_full = np.array(y_pred_full).flatten().astype(int)
 
-    st.dataframe(metricas.style.format("{:.3f}"))
+        y_pred_red = model_reducido.predict(df[['cp', 'thal', 'thalach', 'oldpeak', 'ca', 'chol', 'age']])
+        y_pred_red = np.array(y_pred_red).flatten().astype(int)
+
+        metricas = pd.DataFrame({
+            "Modelo Completo": [accuracy_score(y_true, y_pred_full),
+                                f1_score(y_true, y_pred_full),
+                                roc_auc_score(y_true, y_pred_full)],
+            "Modelo Reducido": [accuracy_score(y_true, y_pred_red),
+                                f1_score(y_true, y_pred_red),
+                                roc_auc_score(y_true, y_pred_red)]
+        }, index=["Accuracy", "F1 Score", "AUC"])
+
+        st.dataframe(metricas.style.format("{:.3f}"))
+
+        fig5, ax5 = plt.subplots()
+        metricas.T.plot(kind='bar', ax=ax5, rot=0, color=["#1f77b4", "#ff7f0e"])
+        ax5.set_ylabel("Valor")
+        ax5.set_title("Comparación de métricas entre modelos")
+        st.pyplot(fig5)
+
+    except Exception as e:
+        st.error("Ocurrió un error al calcular las métricas: " + str(e))
+
     
     # Visualización de barras comparativas
     fig5, ax5 = plt.subplots()
