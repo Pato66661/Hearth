@@ -2,7 +2,7 @@ fastapi
 uvicorn
 joblib
 scikit-learn
-tensorflow-cpu
+tensorflow-cpu==2.15.0
 jinja2
 python-multipart
 streamlit
