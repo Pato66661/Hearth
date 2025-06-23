@@ -1,0 +1,4 @@
+RF = Total predicciones Random Forest
+y_pred_reduced_RF = Predicciones Reducidas Random Forest
+y_pred= Redes Neuronales Total
+y_pred_RNN= Redes Neuronales Reducido
